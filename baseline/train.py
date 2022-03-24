@@ -7,6 +7,8 @@ import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
+import wandb
+from datetime import datetime
 
 
 def klue_re_micro_f1(preds, labels):
@@ -131,6 +133,11 @@ def train():
   trainer.train()
   model.save_pretrained('./best_model')
 def main():
+  wandb.init(project="level2-klue", entity="team-oeanhdoejo")
+  USER_NAME = "Jiyeon"
+  dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+  wandb.run.name = f"{USER_NAME}-{dt_string}"
+
   train()
 
 if __name__ == '__main__':
