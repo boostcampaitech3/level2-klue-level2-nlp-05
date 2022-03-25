@@ -68,6 +68,11 @@ def label_to_num(label):
   return num_label
 
 def train():
+  wandb.init(project="level2-klue", entity="team-oeanhdoejo")
+
+  USER_NAME = "Minji"  # 이름은 변경해서 사용해주세요.
+  dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
   # load model and tokenizer
   # MODEL_NAME = "bert-base-uncased"
   MODEL_NAME = "klue/bert-base"
@@ -100,16 +105,19 @@ def train():
   model.parameters
   model.to(device)
   
+  BATCH_SIZE = 64
+  EPOCHS=20
+
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
-    save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
+    save_steps=500,
+    num_train_epochs=EPOCHS,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
-    per_device_train_batch_size=16,  # batch size per device during training
-    per_device_eval_batch_size=16,   # batch size for evaluation
+    per_device_train_batch_size=BATCH_SIZE,  # batch size per device during training
+    per_device_eval_batch_size=BATCH_SIZE,   # batch size for evaluation
     warmup_steps=500,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
@@ -119,7 +127,8 @@ def train():
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
-    load_best_model_at_end = True 
+    load_best_model_at_end = True,
+    report_to = 'wandb' 
   )
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
@@ -129,15 +138,14 @@ def train():
     compute_metrics=compute_metrics         # define metrics function
   )
 
+  wandb.run.name = f"{USER_NAME}-{MODEL_NAME}-{BATCH_SIZE}-{EPOCHS}-{dt_string}"
+  wandb.config.update(training_args)
+
   # train model
   trainer.train()
   model.save_pretrained('./best_model')
-def main():
-  wandb.init(project="level2-klue", entity="team-oeanhdoejo")
-  USER_NAME = "Jiyeon"
-  dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-  wandb.run.name = f"{USER_NAME}-{dt_string}"
 
+def main():
   train()
 
 if __name__ == '__main__':
