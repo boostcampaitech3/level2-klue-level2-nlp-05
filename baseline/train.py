@@ -53,7 +53,7 @@ def compute_metrics(pred):
   acc = accuracy_score(labels, preds) # 리더보드 평가에는 포함되지 않습니다.
 
   return {
-      'micro_f1_score': f1,
+      'micro f1 score': f1,
       'auprc' : auprc,
       'accuracy': acc,
   }
@@ -111,9 +111,9 @@ def train():
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
-    output_dir='./results_entity_token_2',          # output directory
+    output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
-    save_strategy='epoch',                 # model saving step.
+    save_steps=500,
     num_train_epochs=EPOCHS,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=BATCH_SIZE,  # batch size per device during training
@@ -122,13 +122,12 @@ def train():
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
-    evaluation_strategy='epoch', # evaluation strategy to adopt during training
+    evaluation_strategy='steps', # evaluation strategy to adopt during training
                                 # `no`: No evaluation during training.
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
-    # eval_steps = 500,            # evaluation step.
+    eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
-    metric_for_best_model = 'eval_micro_f1_score',
     report_to = 'wandb' 
   )
   trainer = Trainer(
