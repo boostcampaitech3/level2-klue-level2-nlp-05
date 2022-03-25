@@ -134,8 +134,6 @@ def klue_train(args):
     report_to = 'wandb' 
   )
 
-    # lr_scheduler_type='cosine',
-
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
@@ -149,7 +147,7 @@ def klue_train(args):
 
   # train model
   trainer.train()
-  model.save_pretrained(f'{args.save_dir}/{MODEL_NAME}{dt_string}')
+  model.save_pretrained(f'{args.save_dir}/{MODEL_NAME}')
 
 
 
