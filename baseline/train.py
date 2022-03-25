@@ -80,7 +80,7 @@ def klue_train(args):
 
   # load dataset
   train_dataset = load_data(args.train_dataset)
-  dev_dataset = load_data(args.dev_dataset)) # validation용 데이터는 따로 만드셔야 합니다.
+  dev_dataset = load_data(args.dev_dataset) # validation용 데이터는 따로 만드셔야 합니다.
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
@@ -150,8 +150,6 @@ def klue_train(args):
   trainer.train()
   model.save_pretrained(f'{args.save_dir}/{MODEL_NAME}{dt_string}')
 
-def koelectra_train(args):
-  pass
 
 
 if __name__ == '__main__':
@@ -162,16 +160,14 @@ if __name__ == '__main__':
   parser.add_argument('--batch_size', type=int, default=64)
   parser.add_argument('--model_name', type=str, default='klue/bert-base', help='huggingface model name')
   parser.add_argument('--user_name', type=str, default='Minji', help='wandb user name')
-  parser.add_argument('--train_dataset', type=str, default='../train_entity_token.csv', help='train dataset path')
-  parser.add_argument('--dev_dataset', type=str, default='../dev_entity_token.csv', help='dev dataset path')
+  parser.add_argument('--train_dataset', type=str, default='../dataset/train/split_train_processed.csv', help='train dataset path')
+  parser.add_argument('--dev_dataset', type=str, default='../dataset/train/split_dev_processed.csv', help='dev dataset path')
   parser.add_argument('--epochs', type=int, default=20)
   parser.add_argument('--output_dir', type=str, default='./results')
   parser.add_argument('--metric', type=str, default='micro f1 score')
-  parser.add_argument('--strategy', type=str, default='step')
+  parser.add_argument('--strategy', type=str, default='steps')
   parser.add_argument('--save_dir', type=str, default='./best_model')
   args = parser.parse_args()
 
   if 'klue' in args.model_name:
     klue_train(args)
-  elif 'koelectra' in args.model_name:
-    koelectra_train(args)
