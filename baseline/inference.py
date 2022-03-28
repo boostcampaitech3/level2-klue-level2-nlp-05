@@ -97,7 +97,7 @@ if __name__ == '__main__':
   # model dir
   parser.add_argument('--model_dir', type=str, default="./best_model")
   parser.add_argument('--model_name', type=str, default="klue/bert-base")
-  parser.add_argument('--test_dataset', type=str, defulat='../dataset/test/test_data.csv')
+  parser.add_argument('--test_dataset', type=str, default='../dataset/test/test_data.csv')
   
   args = parser.parse_args()
   print(args)
