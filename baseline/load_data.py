@@ -28,8 +28,25 @@ def preprocessing_dataset(dataset):
   out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
-def preprocessing_dataset_typed_entity(dataset):
-  '''sentence에 punctuation으로 구분되는 typed entity marker를 추가합니다.'''
+def eng2kor(type_name):
+  if type_name == 'ORG':
+    type_name = '조직'
+  elif type_name == 'PER':
+    type_name = '사람'
+  elif type_name == 'LOC':
+    type_name = '장소'
+  elif type_name == 'DAT':
+    type_name = '시간'
+  elif type_name == 'POH':
+    type_name = '고유명사'
+  elif type_name == 'NOH':
+    type_name = '숫자'
+
+def preprocessing_dataset_typed_entity(dataset, eng=True):
+  '''
+  sentence에 punctuation으로 구분되는 typed entity marker를 추가합니다.
+  eng=Ture는 영어, eng=False는 한글 entity marker를 추가합니다.
+  '''
   # 사용하려면, load_daata 함수에서 dataset = preprocessing_dataset_typed_entity(pd_dataset)으로 바꿔주세요!
   subject_entity = []
   object_entity = []
@@ -44,6 +61,10 @@ def preprocessing_dataset_typed_entity(dataset):
     obj_e = obj['end_idx']
     subj_type = subj['type']
     obj_type = obj['type']
+
+    if not eng:
+      subj_type = eng2kor(subj_type)
+      obj_type = eng2kor(obj_type)
             
     if subj_s < obj_s:
       sent_typed = sent[:subj_s]+'#^'+subj_type+'^'+sent[subj_s:subj_e+1]+'#'+sent[subj_e+1:obj_s]+'@*'+obj_type+'*'+sent[obj_s:obj_e+1]+'@'+sent[obj_e+1:]
