@@ -29,18 +29,8 @@ def preprocessing_dataset(dataset):
   return out_dataset
 
 def eng2kor(type_name):
-  if type_name == 'ORG':
-    type_name = '조직'
-  elif type_name == 'PER':
-    type_name = '사람'
-  elif type_name == 'LOC':
-    type_name = '장소'
-  elif type_name == 'DAT':
-    type_name = '시간'
-  elif type_name == 'POH':
-    type_name = '고유명사'
-  elif type_name == 'NOH':
-    type_name = '숫자'
+  typed_name_dict = {'ORG':'조직', 'PER':'사람', 'LOC':'장소', 'DAT':'시간', 'POH':'고유명사', 'NOH':'숫자'}
+  return typed_name_dict[type_name]
 
 def preprocessing_dataset_typed_entity(dataset, eng=True):
   '''
