@@ -9,6 +9,7 @@ from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassifi
 from load_data import *
 import wandb
 from datetime import datetime
+import argparse
 
 
 def klue_re_micro_f1(preds, labels):
@@ -67,31 +68,31 @@ def label_to_num(label):
   
   return num_label
 
-def train():
+def klue_train(args):
   wandb.init(project="level2-klue", entity="team-oeanhdoejo")
 
-  USER_NAME = "Minji"  # 이름은 변경해서 사용해주세요.
+  USER_NAME = args.user_name 
   dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
   # load model and tokenizer
   # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  MODEL_NAME = args.model_name
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
-  train_dataset = load_data("../dataset/train/train.csv")
-  # dev_dataset = load_data("../dataset/train/dev.csv") # validation용 데이터는 따로 만드셔야 합니다.
+  train_dataset = load_data(args.train_dataset)
+  dev_dataset = load_data(args.dev_dataset) # validation용 데이터는 따로 만드셔야 합니다.
 
   train_label = label_to_num(train_dataset['label'].values)
-  # dev_label = label_to_num(dev_dataset['label'].values)
+  dev_label = label_to_num(dev_dataset['label'].values)
 
   # tokenizing dataset
   tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  # tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
+  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
-  # RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
+  RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
 
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -101,18 +102,19 @@ def train():
   model_config.num_labels = 30
 
   model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
-  print(model.config)
+  model.config
   model.parameters
   model.to(device)
   
-  BATCH_SIZE = 64
-  EPOCHS=20
+  BATCH_SIZE=args.batch_size
+  EPOCHS=args.epochs
 
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
-    output_dir='./results',          # output directory
+    output_dir=f'{args.output_dir}/{MODEL_NAME}{dt_string}',          # output directory
     save_total_limit=5,              # number of total save model.
+    save_strategy=args.strategy,
     save_steps=500,
     num_train_epochs=EPOCHS,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
@@ -122,19 +124,21 @@ def train():
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
-    evaluation_strategy='steps', # evaluation strategy to adopt during training
+    evaluation_strategy=args.strategy, # evaluation strategy to adopt during training
                                 # `no`: No evaluation during training.
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
+    metric_for_best_model = args.metric,
     report_to = 'wandb' 
   )
+
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
-    eval_dataset=RE_train_dataset,             # evaluation dataset
+    eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics         # define metrics function
   )
 
@@ -143,10 +147,26 @@ def train():
 
   # train model
   trainer.train()
-  model.save_pretrained('./best_model')
+  model.save_pretrained(f'{args.save_dir}/{MODEL_NAME}')
 
-def main():
-  train()
+
 
 if __name__ == '__main__':
-  main()
+  parser = argparse.ArgumentParser()
+  
+  # model dir
+  parser.add_argument('--model_dir', type=str, default="./best_model")
+  parser.add_argument('--batch_size', type=int, default=64)
+  parser.add_argument('--model_name', type=str, default='klue/bert-base', help='huggingface model name')
+  parser.add_argument('--user_name', type=str, default='Minji', help='wandb user name')
+  parser.add_argument('--train_dataset', type=str, default='../dataset/train/split_train_processed.csv', help='train dataset path')
+  parser.add_argument('--dev_dataset', type=str, default='../dataset/train/split_dev_processed.csv', help='dev dataset path')
+  parser.add_argument('--epochs', type=int, default=20)
+  parser.add_argument('--output_dir', type=str, default='./results')
+  parser.add_argument('--metric', type=str, default='micro f1 score')
+  parser.add_argument('--strategy', type=str, default='steps')
+  parser.add_argument('--save_dir', type=str, default='./best_model')
+  args = parser.parse_args()
+
+  if 'klue' in args.model_name:
+    klue_train(args)
