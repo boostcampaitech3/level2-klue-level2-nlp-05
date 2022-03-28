@@ -8,9 +8,19 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
 import wandb
+import random
 from datetime import datetime
 import argparse
 
+
+def seed_everything(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -69,6 +79,8 @@ def label_to_num(label):
   return num_label
 
 def klue_train(args):
+  seed_everything(args.seed)
+
   wandb.init(project="level2-klue", entity="team-oeanhdoejo")
 
   USER_NAME = args.user_name 
@@ -166,6 +178,7 @@ if __name__ == '__main__':
   parser.add_argument('--metric', type=str, default='micro f1 score')
   parser.add_argument('--strategy', type=str, default='steps')
   parser.add_argument('--save_dir', type=str, default='./best_model')
+  parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
   args = parser.parse_args()
 
   if 'klue' in args.model_name:
