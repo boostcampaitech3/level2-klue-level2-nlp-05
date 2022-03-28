@@ -59,7 +59,7 @@ def preprocessing_dataset_typed_entity(dataset, eng=True):
     if subj_s < obj_s:
       sent_typed = sent[:subj_s]+'#^'+subj_type+'^'+sent[subj_s:subj_e+1]+'#'+sent[subj_e+1:obj_s]+'@*'+obj_type+'*'+sent[obj_s:obj_e+1]+'@'+sent[obj_e+1:]
     elif obj_s < subj_s:
-      sent_typed = sent[:obj_s]+'#^'+obj_type+'^'+sent[obj_s:obj_e+1]+'#'+sent[obj_e+1:subj_s]+'@*'+subj_type+'*'+sent[subj_s:subj_e+1]+'@'+sent[subj_e+1:]
+      sent_typed = sent[:obj_s]+'@*'+obj_type+'*'+sent[obj_s:obj_e+1]+'@'+sent[obj_e+1:subj_s]+'#^'+subj_type+'^'+sent[subj_s:subj_e+1]+'#'+sent[subj_e+1:]
     else:
       sent_typed = sent
 
