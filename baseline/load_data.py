@@ -28,10 +28,53 @@ def preprocessing_dataset(dataset):
   out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
   return out_dataset
 
+def eng2kor(type_name):
+  typed_name_dict = {'ORG':'조직', 'PER':'사람', 'LOC':'장소', 'DAT':'시간', 'POH':'고유명사', 'NOH':'숫자'}
+  return typed_name_dict[type_name]
+
+def preprocessing_dataset_typed_entity(dataset, eng=True):
+  '''
+  sentence에 punctuation으로 구분되는 typed entity marker를 추가합니다.
+  eng=Ture는 영어, eng=False는 한글 entity marker를 추가합니다.
+  '''
+  # 사용하려면, load_daata 함수에서 dataset = preprocessing_dataset_typed_entity(pd_dataset)으로 바꿔주세요!
+  subject_entity = []
+  object_entity = []
+  sentence_typed = []
+  for subj, obj, sent in zip(dataset['subject_entity'], dataset['object_entity'], dataset['sentence']):
+    subj = eval(subj)
+    obj = eval(obj)
+
+    subj_s = subj['start_idx']
+    subj_e = subj['end_idx']
+    obj_s = obj['start_idx']
+    obj_e = obj['end_idx']
+    subj_type = subj['type']
+    obj_type = obj['type']
+
+    if not eng:
+      subj_type = eng2kor(subj_type)
+      obj_type = eng2kor(obj_type)
+            
+    if subj_s < obj_s:
+      sent_typed = sent[:subj_s]+'#^'+subj_type+'^'+sent[subj_s:subj_e+1]+'#'+sent[subj_e+1:obj_s]+'@*'+obj_type+'*'+sent[obj_s:obj_e+1]+'@'+sent[obj_e+1:]
+    elif obj_s < subj_s:
+      sent_typed = sent[:obj_s]+'@*'+obj_type+'*'+sent[obj_s:obj_e+1]+'@'+sent[obj_e+1:subj_s]+'#^'+subj_type+'^'+sent[subj_s:subj_e+1]+'#'+sent[subj_e+1:]
+    else:
+      sent_typed = sent
+
+    subject_entity.append(subj['word'])
+    object_entity.append(obj['word'])
+    sentence_typed.append(sent_typed)
+        
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentence_typed,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+  return out_dataset
+
 def load_data(dataset_dir):
   """ csv 파일을 경로에 맡게 불러 옵니다. """
   pd_dataset = pd.read_csv(dataset_dir)
   dataset = preprocessing_dataset(pd_dataset)
+  # dataset = preprocessing_dataset_typed_entity(pd_dataset)
   
   return dataset
 
