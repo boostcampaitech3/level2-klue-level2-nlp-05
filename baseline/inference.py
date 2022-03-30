@@ -1,4 +1,3 @@
-from xmlrpc.client import boolean
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from torch.utils.data import DataLoader
 from load_data import *
@@ -54,7 +53,10 @@ def load_test_dataset(dataset_dir, tokenizer):
     test dataset을 불러온 후,
     tokenizing 합니다.
   """
-  test_dataset = load_data(dataset_dir)
+  if args.entity_marker:
+    test_dataset = load_data_typed_entity(dataset_dir)
+  else:
+    test_dataset = load_data(dataset_dir)
   test_label = list(map(int,test_dataset['label'].values))
 
   # tokenizing dataset
@@ -105,6 +107,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_name', type=str, default="klue/bert-base")
   parser.add_argument('--test_dataset', type=str, default='../dataset/test/test_data.csv')
   parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize test sentences into multi-sentence (default: False)')
+  parser.add_argument('--entity_marker', type=bool, default=False, help='True: load test dataset with typed entity marker (default=False)')
   
   args = parser.parse_args()
   print(args)

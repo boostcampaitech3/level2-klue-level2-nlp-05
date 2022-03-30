@@ -74,7 +74,13 @@ def load_data(dataset_dir):
   """ csv 파일을 경로에 맡게 불러 옵니다. """
   pd_dataset = pd.read_csv(dataset_dir)
   dataset = preprocessing_dataset(pd_dataset)
-  # dataset = preprocessing_dataset_typed_entity(pd_dataset)
+
+  return dataset
+
+def load_data_typed_entity(dataset_dir):
+  """ csv 파일을 경로에 맡게 불러 옵니다. """
+  pd_dataset = pd.read_csv(dataset_dir)
+  dataset = preprocessing_dataset_typed_entity(pd_dataset)
   
   return dataset
 

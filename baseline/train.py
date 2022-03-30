@@ -1,6 +1,5 @@
 import pickle as pickle
 import os
-from xmlrpc.client import boolean
 import pandas as pd
 import torch
 import sklearn
@@ -93,8 +92,12 @@ def klue_train(args):
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
-  train_dataset = load_data(args.train_dataset)
-  dev_dataset = load_data(args.dev_dataset) # validation용 데이터는 따로 만드셔야 합니다.
+  if args.entity_marker:
+    train_dataset = load_data_typed_entity(args.train_dataset)
+    dev_dataset = load_data_typed_entity(args.dev_dataset)
+  else:
+    train_dataset = load_data(args.train_dataset)
+    dev_dataset = load_data(args.dev_dataset) # validation용 데이터는 따로 만드셔야 합니다.
 
   train_label = label_to_num(train_dataset['label'].values)
   dev_label = label_to_num(dev_dataset['label'].values)
@@ -185,6 +188,8 @@ if __name__ == '__main__':
   parser.add_argument('--save_dir', type=str, default='./best_model')
   parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
   parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize train sentences into multi-sentence (default: False)')
+  parser.add_argument('--entity_marker', type=bool, default=False, help='True: load train dataset with typed entity marker (default=False)')
+
   args = parser.parse_args()
 
   if 'klue' in args.model_name:
