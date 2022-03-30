@@ -60,7 +60,10 @@ def load_test_dataset(dataset_dir, tokenizer):
   test_label = list(map(int,test_dataset['label'].values))
 
   # tokenizing dataset
-  tokenized_test = tokenized_dataset(test_dataset, tokenizer)
+  if args.multi_sent:
+    tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
+  else:
+    tokenized_test = tokenized_dataset(test_dataset, tokenizer)
 
   return test_dataset['id'], tokenized_test, test_label
 
@@ -103,6 +106,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_dir', type=str, default="./best_model")
   parser.add_argument('--model_name', type=str, default="klue/bert-base")
   parser.add_argument('--test_dataset', type=str, default='../dataset/test/test_data.csv')
+  parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize test sentences into multi-sentence (default: False)')
   parser.add_argument('--entity_marker', type=bool, default=False, help='True: load test dataset with typed entity marker (default=False)')
   
   args = parser.parse_args()

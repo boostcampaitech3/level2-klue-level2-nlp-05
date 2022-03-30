@@ -101,3 +101,23 @@ def tokenized_dataset(dataset, tokenizer):
       add_special_tokens=True,
       )
   return tokenized_sentences
+
+def tokenized_dataset_multi(dataset, tokenizer):
+  '''
+  train 또는 inference 할 때 --multi_sent True 옵션을 통해 사용할 수 있습니다.
+  '''
+  concat_entity = []
+  for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
+    temp = ''
+    temp = '이 문장에서 ' + e01 + '와 ' + e02 + '는 어떤 관계일까?'
+    concat_entity.append(temp)
+  tokenized_sentences = tokenizer(
+      list(dataset['sentence']),
+      concat_entity,
+      return_tensors="pt",
+      padding=True,
+      truncation=True,
+      max_length=300,
+      add_special_tokens=True,
+      )
+  return tokenized_sentences
