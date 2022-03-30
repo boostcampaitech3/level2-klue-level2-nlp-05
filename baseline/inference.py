@@ -57,6 +57,7 @@ def load_test_dataset(dataset_dir, tokenizer):
   test_label = list(map(int,test_dataset['label'].values))
   # tokenizing dataset
   tokenized_test = tokenized_dataset(test_dataset, tokenizer)
+#   tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
   return test_dataset['id'], tokenized_test, test_label
 
 def main(args):
