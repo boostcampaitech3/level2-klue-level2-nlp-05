@@ -1,5 +1,6 @@
 import pickle as pickle
 import os
+from xmlrpc.client import boolean
 import pandas as pd
 import torch
 import sklearn
@@ -99,10 +100,12 @@ def klue_train(args):
   dev_label = label_to_num(dev_dataset['label'].values)
 
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
-  tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
-  # tokenized_train = tokenized_dataset_multi(train_dataset, tokenizer)
-  # tokenized_dev = tokenized_dataset_multi(dev_dataset, tokenizer)
+  if args.multi_sent:
+    tokenized_train = tokenized_dataset_multi(train_dataset, tokenizer)
+    tokenized_dev = tokenized_dataset_multi(dev_dataset, tokenizer)
+  else:
+    tokenized_train = tokenized_dataset(train_dataset, tokenizer)
+    tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
@@ -181,6 +184,7 @@ if __name__ == '__main__':
   parser.add_argument('--strategy', type=str, default='steps')
   parser.add_argument('--save_dir', type=str, default='./best_model')
   parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
+  parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize train sentences into multi-sentence (default: False)')
   args = parser.parse_args()
 
   if 'klue' in args.model_name:

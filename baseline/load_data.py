@@ -98,13 +98,7 @@ def tokenized_dataset(dataset, tokenizer):
 
 def tokenized_dataset_multi(dataset, tokenizer):
   '''
-  사용하려면, train.py에서
-  tokenized_train = tokenized_dataset_multi(train_dataset, tokenizer)
-  tokenized_dev = tokenized_dataset_multi(dev_dataset, tokenizer)
-  로 바꿔주세요!
-  inference할 땐, infernece.py에셔
-  tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
-  로 바꿔주세요!
+  train 또는 inference 할 때 --multi_sent True 옵션을 통해 사용할 수 있습니다.
   '''
   concat_entity = []
   for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):

@@ -1,3 +1,4 @@
+from xmlrpc.client import boolean
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from torch.utils.data import DataLoader
 from load_data import *
@@ -55,9 +56,13 @@ def load_test_dataset(dataset_dir, tokenizer):
   """
   test_dataset = load_data(dataset_dir)
   test_label = list(map(int,test_dataset['label'].values))
+
   # tokenizing dataset
-  tokenized_test = tokenized_dataset(test_dataset, tokenizer)
-#   tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
+  if args.multi_sent:
+    tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
+  else:
+    tokenized_test = tokenized_dataset(test_dataset, tokenizer)
+
   return test_dataset['id'], tokenized_test, test_label
 
 def main(args):
@@ -99,6 +104,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_dir', type=str, default="./best_model")
   parser.add_argument('--model_name', type=str, default="klue/bert-base")
   parser.add_argument('--test_dataset', type=str, default='../dataset/test/test_data.csv')
+  parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize test sentences into multi-sentence (default: False)')
   
   args = parser.parse_args()
   print(args)
