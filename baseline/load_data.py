@@ -116,9 +116,10 @@ def tokenized_dataset_typed_entity(dataset, tokenizer):
   e1_masks = []
   e2_masks = []
   for sent in tokenized_sentences['input_ids']:
+    sent = list(sent)
     e1_mask = [0]*512
     e2_mask = [0]*512
-    for i, tok in enumerate(list(sent)):
+    for i, tok in enumerate(sent):
       if tok == 65 and i != sent.index(65):
         e1_mask[i+1] = 1
       if tok == 14 and i != sent.index(14):

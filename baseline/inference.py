@@ -73,6 +73,8 @@ def load_test_dataset(dataset_dir, tokenizer):
   # tokenizing dataset
   if args.multi_sent:
     tokenized_test = tokenized_dataset_multi(test_dataset, tokenizer)
+  elif args.entity_marker:
+    tokenized_test = tokenized_dataset_typed_entity(test_dataset, tokenizer)
   else:
     tokenized_test = tokenized_dataset(test_dataset, tokenizer)
 
