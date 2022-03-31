@@ -5,12 +5,13 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer, get_linear_schedule_with_warmup
 from load_data import *
 import wandb
 import random
 from datetime import datetime
 import argparse
+from model import *
 
 
 def seed_everything(seed):
@@ -106,6 +107,9 @@ def klue_train(args):
   if args.multi_sent:
     tokenized_train = tokenized_dataset_multi(train_dataset, tokenizer)
     tokenized_dev = tokenized_dataset_multi(dev_dataset, tokenizer)
+  elif args.entity_marker:
+    tokenized_train = tokenized_dataset_typed_entity(train_dataset, tokenizer)
+    tokenized_dev = tokenized_dataset_typed_entity(dev_dataset, tokenizer)
   else:
     tokenized_train = tokenized_dataset(train_dataset, tokenizer)
     tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
@@ -115,13 +119,16 @@ def klue_train(args):
   RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
 
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
   print(device)
   # setting model hyperparameter
   model_config =  AutoConfig.from_pretrained(MODEL_NAME)
   model_config.num_labels = 30
-
-  model =  AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  
+  if args.entity_marker:
+    model =  TypedEntityRoberta.from_pretrained(MODEL_NAME, config=model_config)
+  else:
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
+  
   model.config
   model.parameters
   model.to(device)
@@ -132,15 +139,15 @@ def klue_train(args):
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
-    output_dir=f'{args.output_dir}/{MODEL_NAME}{dt_string}',          # output directory
+    output_dir=f'{args.output_dir}/{MODEL_NAME}',          # output directory
     save_total_limit=5,              # number of total save model.
     save_strategy=args.strategy,
     save_steps=500,
     num_train_epochs=EPOCHS,              # total number of training epochs
-    learning_rate=5e-5,               # learning_rate
+    learning_rate=args.learning_rate,               # learning_rate
     per_device_train_batch_size=BATCH_SIZE,  # batch size per device during training
     per_device_eval_batch_size=BATCH_SIZE,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
+    warmup_steps=args.warmup_steps,                # number of warmup steps for learning rate scheduler
     weight_decay=0.01,               # strength of weight decay
     logging_dir='./logs',            # directory for storing logs
     logging_steps=100,              # log saving step.
@@ -151,12 +158,15 @@ def klue_train(args):
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True,
     metric_for_best_model = args.metric,
-    report_to = 'wandb' 
+    report_to = 'wandb',
+    dataloader_drop_last=True,
+    gradient_accumulation_steps=4
   )
 
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
+    # optimizers = (optimizer, scheduler),
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
     compute_metrics=compute_metrics         # define metrics function
@@ -170,7 +180,6 @@ def klue_train(args):
   model.save_pretrained(f'{args.save_dir}/{MODEL_NAME}')
 
 
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
@@ -179,16 +188,18 @@ if __name__ == '__main__':
   parser.add_argument('--batch_size', type=int, default=64)
   parser.add_argument('--model_name', type=str, default='klue/bert-base', help='huggingface model name')
   parser.add_argument('--user_name', type=str, default='Minji', help='wandb user name')
-  parser.add_argument('--train_dataset', type=str, default='../dataset/train/split_train_processed.csv', help='train dataset path')
-  parser.add_argument('--dev_dataset', type=str, default='../dataset/train/split_dev_processed.csv', help='dev dataset path')
-  parser.add_argument('--epochs', type=int, default=20)
+  parser.add_argument('--train_dataset', type=str, default='/opt/ml/dataset/train/split_train.csv', help='train dataset path')
+  parser.add_argument('--dev_dataset', type=str, default='/opt/ml/dataset/train/split_dev.csv', help='dev dataset path')
+  parser.add_argument('--epochs', type=int, default=5)
   parser.add_argument('--output_dir', type=str, default='./results')
   parser.add_argument('--metric', type=str, default='micro f1 score')
-  parser.add_argument('--strategy', type=str, default='steps')
+  parser.add_argument('--strategy', type=str, default='epoch')
   parser.add_argument('--save_dir', type=str, default='./best_model')
   parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
   parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize train sentences into multi-sentence (default: False)')
   parser.add_argument('--entity_marker', type=bool, default=False, help='True: load train dataset with typed entity marker (default=False)')
+  parser.add_argument('--learning_rate', type=int, default=3e-5)
+  parser.add_argument('--warmup_steps', type=int, default=500)
 
   args = parser.parse_args()
 
