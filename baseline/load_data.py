@@ -80,7 +80,7 @@ def load_data(dataset_dir):
 def load_data_typed_entity(dataset_dir):
   """ csv 파일을 경로에 맡게 불러 옵니다. """
   pd_dataset = pd.read_csv(dataset_dir)
-  dataset = preprocessing_dataset_typed_entity(pd_dataset)
+  dataset = preprocessing_dataset_typed_entity(pd_dataset, eng=False)  # 영어로 추가하고 싶은 경우 eng=True로 변경
   
   return dataset
 
@@ -100,6 +100,34 @@ def tokenized_dataset(dataset, tokenizer):
       max_length=256,
       add_special_tokens=True,
       )
+  return tokenized_sentences
+
+def tokenized_dataset_typed_entity(dataset, tokenizer):
+  """ typed entity marker 를 추가해서 토크나이징을 합니다. e1_mask, e2_mask가 추가됩니다. """
+  tokenized_sentences = tokenizer(
+      list(dataset['sentence']),
+      return_tensors="pt",
+      padding=True,
+      truncation=True,
+      max_length=512,
+      add_special_tokens=True,
+      )
+  
+  e1_masks = []
+  e2_masks = []
+  for sent in tokenized_sentences['input_ids']:
+    sent = list(sent)
+    e1_mask = [0]*512
+    e2_mask = [0]*512
+    for i, tok in enumerate(sent):
+      if tok == 65 and i != sent.index(65):
+        e1_mask[i+1] = 1
+      if tok == 14 and i != sent.index(14):
+        e2_mask[i+1] = 1
+    e1_masks.append(e1_mask)
+    e2_masks.append(e2_mask)
+  tokenized_sentences['e1_mask'] = torch.tensor(e1_masks)
+  tokenized_sentences['e2_mask'] = torch.tensor(e2_masks)
   return tokenized_sentences
 
 def tokenized_dataset_multi(dataset, tokenizer):
