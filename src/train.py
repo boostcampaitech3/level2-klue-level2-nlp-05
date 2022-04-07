@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
     # -- save setting
     parser.add_argument('--model_dir', type=str, default="./models")
-    parser.add_argument('--output_dir', type=str, default='./results')
+    # parser.add_argument('--output_dir', type=str, default='./results')
 
     args = parser.parse_args()
 

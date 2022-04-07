@@ -1,3 +1,4 @@
+from tkinter import TRUE
 import numpy as np
 import torch
 from torch.utils.data import Dataset, Subset, random_split
@@ -7,14 +8,18 @@ import pickle
 
 
 class KLUEDataset(Dataset):
-    def __init__(self, data_dir, model_name, task = None, val_ratio=0.1):
+    def __init__(self, data_dir, model_name, task=None, val_ratio=0.1, mode='train'):
         self.data_dir = data_dir
         self.val_ratio = val_ratio
         self.task = task
+        self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-        self.tokenized_data, labels = self.setup()
-        self.labels = self.label_to_num(labels)
+        self.mode = mode
+        self.tokenized_data, self.dataset = self.setup()
+        if self.mode == 'train':
+            self.labels = self.label_to_num(self.dataset['label'].values)
+        self.ids = self.dataset['id'].values
         self.num_classes = 30
 
     def setup(self):
@@ -28,8 +33,8 @@ class KLUEDataset(Dataset):
             obj = eval(obj)
             subject_entity.append(subj['word'])
             object_entity.append(obj['word'])
-        
-            if self.task == 'entity_marker':      
+
+            if self.task == 'entity_marker':
                 subj_s = subj['start_idx']
                 subj_e = subj['end_idx']
                 obj_s = obj['start_idx']
@@ -38,41 +43,56 @@ class KLUEDataset(Dataset):
                 obj_type = obj['type']
                 subj_type = self.eng2kor(subj_type)
                 obj_type = self.eng2kor(obj_type)
-                
+
                 if subj_s < obj_s:
-                    sent_typed = sent[:subj_s]+' # '+sent[subj_s:subj_e+1]+' ^ '+subj_type+' ^ # '+sent[subj_e+1:obj_s]+' @ '+sent[obj_s:obj_e+1]+' * '+obj_type+' * @ '+sent[obj_e+1:]
+                    sent_typed = sent[:subj_s] + ' # ' + sent[subj_s:subj_e + 1] + ' ^ ' + subj_type + ' ^ # ' + \
+                                 sent[subj_e + 1:obj_s] + ' @ ' + sent[obj_s:obj_e + 1] + ' * ' + obj_type + ' * @ ' + \
+                                 sent[obj_e + 1:]
                 elif obj_s < subj_s:
-                    sent_typed = sent[:obj_s]+' @ '+sent[obj_s:obj_e+1]+' * '+obj_type+' * @ '+sent[obj_e+1:subj_s]+' # '+sent[subj_s:subj_e+1]+' ^ '+subj_type+' ^ # '+sent[subj_e+1:]
+                    sent_typed = sent[:obj_s] + ' @ ' + sent[obj_s:obj_e + 1] + ' * ' + obj_type + ' * @ ' + \
+                                 sent[obj_e + 1:subj_s] + ' # ' + sent[subj_s:subj_e + 1] + ' ^ ' + subj_type + ' ^ # ' \
+                                 + sent[subj_e + 1:]
                 else:
                     sent_typed = sent
                 sentence_typed.append(sent_typed)
-        
-        if self.task=='entity_marker':
-            dataset = pd.DataFrame({'id':dataset['id'], 'sentence':sentence_typed,'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label']})
-            
+
+        if self.task == 'entity_marker':
+            dataset = pd.DataFrame({'id': dataset['id'], 'sentence': sentence_typed, 'subject_entity': subject_entity,
+                                    'object_entity': object_entity, 'label': dataset['label']})
+
             tokenized_sentences = self.tokenizer(
-            list(dataset['sentence']),
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-            max_length=512,
-            add_special_tokens=True,
-            return_token_type_ids=False
+                list(dataset['sentence']),
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=512,
+                add_special_tokens=True,
+                return_token_type_ids=True
             )
             e1_masks = []
             e2_masks = []
+            if 't5' in self.model_name:
+                tok1 = 387
+                tok2 = 1250
+            elif 'bigbird' in self.model_name:
+                tok1 = 507
+                tok2 = 536
+            elif 'bert' in self.model_name or 'electra' in self.model_name:
+                tok1 = 7
+                tok2 = 36
+
             for sent in tokenized_sentences['input_ids']:
                 sent = list(sent)
-                e1_mask = [0]*512
-                e2_mask = [0]*512
-                e1_mask[sent.index(387)+1] = 1   # '#' 토큰 번호 찾아서 바꿔주기 현재는 mt5 모델 토큰id로 지정
-                e2_mask[sent.index(1250)+1] = 1  # '@' 토큰 번호 찾아서 바꿔주기 현재는 mt5 모델 토큰id로 지정
+                e1_mask = [0] * 512
+                e2_mask = [0] * 512
+                e1_mask[sent.index(tok1) + 1] = 1  # '#' 토큰 번호 찾아서 바꿔주기 현재는 mt5 모델 토큰id로 지정
+                e2_mask[sent.index(tok2) + 1] = 1  # '@' 토큰 번호 찾아서 바꿔주기 현재는 mt5 모델 토큰id로 지정
                 e1_masks.append(e1_mask)
                 e2_masks.append(e2_mask)
             tokenized_sentences['e1_mask'] = torch.tensor(e1_masks)
             tokenized_sentences['e2_mask'] = torch.tensor(e2_masks)
-        
-        elif self.task =='multi_sentence':
+
+        elif self.task == 'multi_sentence':
             concat_entity = []
             for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
                 temp = ''
@@ -86,10 +106,12 @@ class KLUEDataset(Dataset):
                 truncation=True,
                 max_length=300,
                 add_special_tokens=True,
-                )
+            )
 
         else:
-            dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label']})
+            dataset = pd.DataFrame(
+                {'id': dataset['id'], 'sentence': dataset['sentence'], 'subject_entity': subject_entity,
+                 'object_entity': object_entity, 'label': dataset['label']})
             concat_entity = []
             for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
                 temp = ''
@@ -103,15 +125,15 @@ class KLUEDataset(Dataset):
                 truncation=True,
                 max_length=256,
                 add_special_tokens=True,
-                )
-        
-        return tokenized_sentences, dataset['label']
+            )
+
+        return tokenized_sentences, dataset
 
     @staticmethod
     def eng2kor(type_name):
-        typed_name_dict = {'ORG':'조직', 'PER':'사람', 'LOC':'장소', 'DAT':'시간', 'POH':'고유명사', 'NOH':'숫자'}
+        typed_name_dict = {'ORG': '조직', 'PER': '사람', 'LOC': '장소', 'DAT': '시간', 'POH': '고유명사', 'NOH': '숫자'}
         return typed_name_dict[type_name]
-    
+
     @staticmethod
     def label_to_num(label):
         num_label = []
@@ -122,13 +144,16 @@ class KLUEDataset(Dataset):
 
         return num_label
 
-    def __getitem__(self, index): 
+    def __getitem__(self, index):
         item = {key: val[index].clone().detach() for key, val in self.tokenized_data.items()}
-        labels = torch.tensor(self.labels[index])
-        return item, labels
+        if self.mode == 'train':
+            labels = torch.tensor(self.labels[index])
+            return item, labels
+        else: # if self.mode == 'eval':
+            return item
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.dataset)
 
     def split_dataset(self):
         """
