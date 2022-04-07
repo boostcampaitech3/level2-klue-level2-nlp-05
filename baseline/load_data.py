@@ -2,6 +2,7 @@ import pickle as pickle
 import os
 import pandas as pd
 import torch
+from tqdm import tqdm
 
 
 class RE_Dataset(torch.utils.data.Dataset):
@@ -115,7 +116,7 @@ def tokenized_dataset_typed_entity(dataset, tokenizer):
   
   e1_masks = []
   e2_masks = []
-  for sent in tokenized_sentences['input_ids']:
+  for sent in tqdm(tokenized_sentences['input_ids']):
     sent = list(sent)
     e1_mask = [0]*512
     e2_mask = [0]*512

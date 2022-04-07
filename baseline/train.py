@@ -79,7 +79,7 @@ def label_to_num(label):
   
   return num_label
 
-def klue_train(args):
+def train(args):
   seed_everything(args.seed)
 
   wandb.init(project="level2-klue", entity="team-oeanhdoejo")
@@ -198,10 +198,9 @@ if __name__ == '__main__':
   parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
   parser.add_argument('--multi_sent', type=bool, default=False, help='True: tokenize train sentences into multi-sentence (default: False)')
   parser.add_argument('--entity_marker', type=bool, default=False, help='True: load train dataset with typed entity marker (default=False)')
-  parser.add_argument('--learning_rate', type=int, default=3e-5)
+  parser.add_argument('--learning_rate', type=int, default=5e-5)
   parser.add_argument('--warmup_steps', type=int, default=500)
 
   args = parser.parse_args()
 
-  if 'klue' in args.model_name:
-    klue_train(args)
+  train(args)
