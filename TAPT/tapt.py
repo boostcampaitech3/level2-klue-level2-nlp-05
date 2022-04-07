@@ -21,7 +21,6 @@ tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
 
 # setting model hyperparameter
 model_config =  AutoConfig.from_pretrained(MODEL_NAME)
-model_config.num_labels = 30
 
 model =  BertForMaskedLM.from_pretrained(MODEL_NAME, config=model_config)
 model.to(device)
