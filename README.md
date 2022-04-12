@@ -4,9 +4,7 @@
 
 # Project: 문장 내 개체간 관계 추출
 
-- Wrap-up Report
-
-[KLUE_NLP_팀 리포트(05조).pdf](https://github.com/boostcampaitech3/level2-klue-level2-nlp-05/files/8474802/KLUE_NLP_.05.pdf)
+- Wrap-up Report : [KLUE_NLP_팀 리포트(05조).pdf](https://github.com/boostcampaitech3/level2-klue-level2-nlp-05/files/8474802/KLUE_NLP_.05.pdf)
 
 ## Members
 
