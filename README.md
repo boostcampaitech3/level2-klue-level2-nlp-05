@@ -15,8 +15,8 @@
 | 공통 |  | EDA, git |
 | 강나경 | angieKang | Roberta+LSTM, entity embedding layer, ko-bigbird |
 | 김산 | nasmik419 | entity marker(special token at bert), tapt 시도, 타 모델 kobert 시도, 데이터 검수 |
-| 김현지 | TB2715 | entity marker(special token at bert), tapt 시도, 타 모델 kobert 시도, 데이터 검수 |
-| 정민지 | minji2744 | entity marker(special token at bert), tapt 시도, 타 모델 kobert 시도, 데이터 검수 |
+| 김현지 | TB2715 | 실험 환경 설정, Baseline PyTorch 구조로 수정, MT5 실험 |
+| 정민지 | minji2744 | Task Adaptive Pre-Training, Roberta, Bert, Model Architecture, GPT2, Electra, MT5 |
 | 최지연 | jeeyeon51 | Back Translation, Roberta, Typed Entity Marker, Multi-Sentence, Curriculum Learninig, RECENT |
 
 ## 문제 개요
@@ -28,6 +28,18 @@
 ## 프로젝트 수행 절차 및 방법
 
 <img width="2689" alt="프로젝트 수행 절차" src="https://user-images.githubusercontent.com/59854630/163010472-a20ce975-f819-487b-a186-f57f86202cec.png">
+
+### MODELS
+- KLUE-BERT-base
+    - typed entity marker (special token)
+    - TAPT
+- KLUE-RoBERTa-large
+    - Typed Entity Marker (punct)
+    - Multi-Sentence
+    - LSTM
+- SOTA
+    - Curriculum Learning
+    - RECENT
 
 ## 데이터셋 구조
 
