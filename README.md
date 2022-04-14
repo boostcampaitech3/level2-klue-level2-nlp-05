@@ -15,7 +15,7 @@
 | 김산   | [mounKim](https://github.com/mounKim) | entity marker(special token at bert), tapt 시도, 타 모델 kobert 시도, 데이터 검수 |
 | 김현지 | [TB2715](https://github.com/TB2715) | 실험 환경 설정, Baseline PyTorch 구조로 수정, MT5 실험 |
 | 정민지 | [minji2744](https://github.com/minji2744) | Task Adaptive Pre-Training, Roberta, Bert, Model Architecture, GPT2, Electra, MT5 |
-| 최지연 | [jeeyeon51](https://github.com/jeeyeon51) | Back Translation, Roberta, Typed Entity Marker, Multi-Sentence, Curriculum Learninig, RECENT |
+| 최지연 | [jeeyeon51](https://github.com/jeeyeon51) | Back Translation, Roberta, Typed Entity Marker, Multi-Sentence, Curriculum Learninig, ~~RECENT~~ |
 
 ## 문제 개요
 
@@ -37,7 +37,7 @@
     - LSTM
 - SOTA
     - Curriculum Learning
-    - RECENT
+    - ~~RECENT~~
 
 ## 데이터셋 구조
 
@@ -94,5 +94,5 @@ pip install wandb
 ### 2. 코드 실행 방법
 
 1. 먼저 위의 [requirements](#requirements) 참고해 환경설정을 진행합니다.
-2. `./run_train.sh` 명령어를 통해 하이퍼파라미터 옵션을 수정한 모델들을 훈련합니다.
+2. `./run.sh` 명령어를 통해 하이퍼파라미터 옵션을 수정한 모델들을 훈련합니다.
 3. `python [inference.py](http://inference.py) --dataset_folder '/opt/ml/dataset/test’ --test_dataset 'test_data.csv’ --mode ‘eval’ --task ‘entity_marker’ --model_name 't5’ --model_class 'MT5ForTypedEntityMarker’ --model_dir ‘/workspace/lv2-klue/src/models’ --output_dir '/workspace/lv2-klue/src/outputs’` 을 사용해 추론된 결과를 `output_dir`에csv로 저장합니다.
